@@ -13,7 +13,7 @@ $db_name = $_ENV['DB_DATABASE'];
 $db_username = $_ENV['DB_USERNAME'];
 $db_password = $_ENV['DB_PASSWORD'];
 
-$dsn = "$db_type:host=$db_host;dbname=$db_name";
-$conn = new PDO($dsn, $db_username, $db_password);
+$conn = new PDO("$db_type:host=$db_host;dbname=$db_name", $db_username, $db_password);
+
 
 session_start();

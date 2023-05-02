@@ -8,7 +8,12 @@ class User
 {
 	protected $id;
 	protected $first_name;
+	protected $middle_name;
 	protected $last_name;
+	protected $gender;
+	protected $birthdate;
+	protected $address;
+	protected $contact;
 	protected $email;
 	protected $pass;
 	protected $created_at;
@@ -20,12 +25,17 @@ class User
 
 	public function getFullName()
 	{
-		return $this->first_name . ' ' . $this->last_name;
+		return $this->first_name . ' ' . $this->middle_name . ' ' . $this->last_name;
 	}
 
 	public function getFirstName()
 	{
 		return $this->first_name;
+	}
+
+	public function getMiddleName()
+	{
+		return $this->middle_name;
 	}
 
 	public function getLastName()
@@ -36,6 +46,26 @@ class User
 	public function getEmail()
 	{
 		return $this->email;
+	}
+
+	public function getBirthDate()
+	{
+		return $this->birthdate;
+	}
+
+	public function getGender()
+	{
+		return $this->gender;
+	}
+
+	public function getAddress()
+	{
+		return $this->address;
+	}
+
+	public function getContact()
+	{
+		return $this->contact;
 	}
 
 	public static function getById($id)
@@ -64,8 +94,7 @@ class User
 	public static function hashPassword($password)
 	{
 		$hashed_password = null;
-		// DO SOMETHING HERE TO HASH THE PASSWORD
-		// ...
+		$hashed_password = crypt($password,'$5$');
 		return $hashed_password;
 	}
 
@@ -81,14 +110,17 @@ class User
 				LIMIT 1
 			";
 			$statement = $conn->prepare($sql);
+			$user = $statement->fetchObject('App\User');
+		
+			if (password_verify($pass, User::hashPassword($pass))) {
+				$pass = User::hashPassword($pass);
+				$statement->execute([
+					'email' => $email,
+					'pass' => $pass
+				]);
+				$result = $statement->fetchObject('App\user');
+			}
 
-			// Perform password hash verification (if necessary)
-
-			$statement->execute([
-				'email' => $email,
-				'pass' => $pass
-			]);
-			$result = $statement->fetchObject('App\User');
 			return $result;
 		} catch (PDOException $e) {
 			error_log($e->getMessage());
@@ -97,18 +129,18 @@ class User
 		return null;
 	}
 
-	public static function register($first_name, $last_name, $email, $password)
+	public static function register($first_name, $middle_name, $last_name, $gender, $birthdate, $address, $contact, $email, $password)
 	{
 		global $conn;
+		
 
 		try {
-			// Hash the password before inserting it to DB
-			// ..
-
+			$hashed_password = self::hashPassword($password);
 			$sql = "
-				INSERT INTO users (first_name, last_name, email, pass)
-				VALUES ('$first_name', '$last_name', '$email', '$password')
+				INSERT INTO users (first_name, middle_name, last_name, gender, birthdate, address, contact, email, pass)
+				VALUES ('$first_name', '$middle_name', '$last_name', '$gender', '$birthdate', '$address', '$contact', '$email', '$hashed_password')
 			";
+
 			$conn->exec($sql);
 			// echo "<li>Executed SQL query " . $sql;
 			return $conn->lastInsertId();
@@ -125,15 +157,17 @@ class User
 
 		try {
 			foreach ($users as $user) {
-				// Hash the password before inserting it to DB
-				// ..
-
 				$sql = "
 					INSERT INTO users
 					SET
 						first_name=\"{$user['first_name']}\",
+						middle_name=\"{$user['middle_name']}\",
 						last_name=\"{$user['last_name']}\",
 						email=\"{$user['email']}\",
+						birthdate=\"{$user['birthdate']}\",
+						gender=\"{$user['gender']}\",
+						address=\"{$user['address']}\",
+						contact=\"{$user['contact']}\",
 						pass=\"{$user['pass']}\"
 				";
 				$conn->exec($sql);
@@ -145,5 +179,5 @@ class User
 		}
 
 		return false;
-	}
+	}	
 }
